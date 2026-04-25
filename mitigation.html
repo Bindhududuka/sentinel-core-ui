@@ -1,0 +1,57 @@
+<section id="mitigations">
+  <div class="reveal-left">
+    <span class="section-label">03 / Defensive Measures</span>
+    <h2 class="section-title">MITIGATION<br/>STRATEGIES</h2>
+    <p class="section-desc">Layered defences across prevention, detection, and recovery — applied at the OS, memory, network, and process levels.</p>
+  </div>
+  <div class="mit-grid">
+    <div class="mit-card reveal" style="transition-delay:.05s">
+      <div class="mit-num">01</div>
+      <div>
+        <div class="mit-title">STACK CANARIES & BOUNDS CHECK</div>
+        <p class="mit-text">Sentinel values placed between local variables and return address detect overflow before control flow is hijacked. Combined with compiler-enforced bounds checking on array operations.</p>
+        <div class="mit-tags"><span class="mit-tag">PREVENTION</span><span class="mit-tag">MEMORY</span><span class="mit-tag">BUFFER OVERFLOW</span></div>
+      </div>
+    </div>
+    <div class="mit-card reveal" style="transition-delay:.1s">
+      <div class="mit-num">02</div>
+      <div>
+        <div class="mit-title">ASLR + DEP / NX BITS</div>
+        <p class="mit-text">Address space layout randomisation defeats hardcoded pointer exploits. Non-executable stack and heap pages (DEP/NX) prevent shellcode execution even after successful overflow.</p>
+        <div class="mit-tags"><span class="mit-tag">PREVENTION</span><span class="mit-tag">MEMORY</span><span class="mit-tag">ROP</span></div>
+      </div>
+    </div>
+    <div class="mit-card reveal" style="transition-delay:.15s">
+      <div class="mit-num">03</div>
+      <div>
+        <div class="mit-title">CODE SIGNING & BINARY INTEGRITY</div>
+        <p class="mit-text">Cryptographic signatures on all binaries and kernel modules detect trapdoor insertion and supply-chain compromise at load time. Verified boot chains ensure integrity from firmware up.</p>
+        <div class="mit-tags"><span class="mit-tag">DETECTION</span><span class="mit-tag">OS-LEVEL</span><span class="mit-tag">TRAPDOOR</span></div>
+      </div>
+    </div>
+    <div class="mit-card reveal" style="transition-delay:.2s">
+      <div class="mit-num">04</div>
+      <div>
+        <div class="mit-title">DNSSEC + CACHE HARDENING</div>
+        <p class="mit-text">DNSSEC signed records prevent forged DNS responses. Source-port randomisation and TTL anomaly monitoring close the transaction-ID prediction attack surface against resolvers.</p>
+        <div class="mit-tags"><span class="mit-tag">PREVENTION</span><span class="mit-tag">NETWORK</span><span class="mit-tag">CACHE POISON</span></div>
+      </div>
+    </div>
+    <div class="mit-card reveal" style="transition-delay:.25s">
+      <div class="mit-num">05</div>
+      <div>
+        <div class="mit-title">ATOMIC OPS & MUTEX LOCKS</div>
+        <p class="mit-text">Kernel-level atomic check-and-set operations eliminate TOCTOU race windows. Mandatory access control policies restrict which processes can access sensitive resources, shrinking the attack surface.</p>
+        <div class="mit-tags"><span class="mit-tag">PREVENTION</span><span class="mit-tag">CONCURRENCY</span><span class="mit-tag">TOCTOU</span></div>
+      </div>
+    </div>
+    <div class="mit-card reveal" style="transition-delay:.3s">
+      <div class="mit-num">06</div>
+      <div>
+        <div class="mit-title">SNAPSHOT ROLLBACK & ISOLATION</div>
+        <p class="mit-text">VM and container snapshots enable sub-minute recovery to a known-good state. Process sandboxing via seccomp and namespaces limits blast radius — a compromised process cannot escalate.</p>
+        <div class="mit-tags"><span class="mit-tag">RECOVERY</span><span class="mit-tag">ISOLATION</span><span class="mit-tag">ALL CLASSES</span></div>
+      </div>
+    </div>
+  </div>
+</section>
