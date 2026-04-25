@@ -44,9 +44,9 @@ Cybersecurity dashboard with:
 - Cloud deployment
 
 ## 👨‍💻 Author
+Bindhu
+Vinayak
+Ashwani
 
-Your Name
-
----
 
 ⭐ If you like this project, give it a star!
