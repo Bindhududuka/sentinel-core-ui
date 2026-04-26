@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SENTINEL — OS Security Framework</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #020608;
+  --bg2: #080d10;
+  --panel: #0a1014;
+  --border: #1a2830;
+  --accent: #00e5ff;
+  --accent2: #ff3d5a;
+  --accent3: #b8ff57;
+  --text: #cdd9e0;
+  --muted: #4a6070;
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  overflow-x:hidden;
+}
+
+/* ─── CANVAS BACKGROUND ─── */
+#matrix-canvas{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;opacity:0.045;
+}
+
+/* ─── NOISE OVERLAY ─── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:0.025;pointer-events:none;z-index:1;
+}
+
+/* ─── SCANLINES ─── */
+body::after{
+  content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,255,0.015) 2px,rgba(0,229,255,0.015) 4px);
+  pointer-events:none;z-index:1;
+}
+
+/* ─── LAYOUT ─── */
+main{position:relative;z-index:2;}
+
+/* ─── NAV ─── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 48px;
+  border-bottom:1px solid rgba(0,229,255,0.08);
+  background:rgba(2,6,8,0.85);
+  backdrop-filter:blur(12px);
+  animation:fadeDown .8s ease both;
+}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:none}}
+.nav-logo{
+  font-family:var(--font-display);
+  font-size:28px;letter-spacing:4px;
+  color:var(--accent);
+  text-shadow:0 0 20px rgba(0,229,255,0.5);
+  position:relative;
+}
+.nav-logo::after{
+  content:'v2.4.1';
+  font-family:var(--font-mono);
+  font-size:10px;
+  color:var(--muted);
+  position:absolute;
+  right:-44px;bottom:2px;
+  letter-spacing:1px;
+}
+.nav-links{display:flex;gap:32px;list-style:none;}
+.nav-links a{
+  font-family:var(--font-mono);font-size:12px;
+  color:var(--muted);text-decoration:none;
+  letter-spacing:1px;text-transform:uppercase;
+  transition:color .2s;
+}
+.nav-links a:hover{color:var(--accent);}
+.nav-status{
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--font-mono);font-size:11px;color:var(--accent3);
+}
+.status-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--accent3);
+  animation:pulse-green 2s infinite;
+}
+@keyframes pulse-green{0%,100%{box-shadow:0 0 0 0 rgba(184,255,87,.5)}50%{box-shadow:0 0 0 6px rgba(184,255,87,0)}}
+
+/* ─── HERO ─── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:120px 48px 80px;
+  position:relative;text-align:center;
+  overflow:hidden;
+}
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,0.04) 1px,transparent 1px);
+  background-size:60px 60px;
+  animation:gridDrift 20s linear infinite;
+}
+@keyframes gridDrift{from{transform:translateY(0)}to{transform:translateY(60px)}}
+.hero-glow{
+  position:absolute;width:600px;height:600px;
+  background:radial-gradient(circle,rgba(0,229,255,0.07) 0%,transparent 70%);
+  border-radius:50%;animation:glowPulse 4s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes glowPulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.1);opacity:1}}
+.hero-eyebrow{
+  font-family:var(--font-mono);font-size:12px;
+  letter-spacing:4px;color:var(--accent);
+  text-transform:uppercase;margin-bottom:20px;
+  animation:fadeUp .8s .3s ease both;
+}
+.hero h1{
+  font-family:var(--font-display);
+  font-size:clamp(72px,10vw,140px);
+  line-height:.9;letter-spacing:2px;
+  color:#fff;margin-bottom:16px;
+  animation:fadeUp .8s .5s ease both;
+  text-shadow:0 0 80px rgba(0,229,255,0.2);
+}
+.hero h1 span{color:var(--accent);}
+.hero-sub{
+  font-size:16px;line-height:1.7;color:var(--muted);
+  max-width:560px;margin-bottom:48px;
+  animation:fadeUp .8s .7s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+.hero-cta{
+  display:flex;gap:16px;flex-wrap:wrap;justify-content:center;
+  animation:fadeUp .8s .9s ease both;
+}
+.btn-primary{
+  padding:14px 32px;
+  background:var(--accent);color:#000;
+  font-family:var(--font-mono);font-size:13px;
+  letter-spacing:2px;text-transform:uppercase;
+  border:none;cursor:pointer;
+  clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+  transition:all .2s;text-decoration:none;display:inline-block;
+}
+.btn-primary:hover{
+  background:#fff;transform:translateY(-2px);
+  box-shadow:0 8px 32px rgba(0,229,255,0.4);
+}
+.btn-ghost{
+  padding:13px 32px;
+  background:transparent;color:var(--accent);
+  font-family:var(--font-mono);font-size:13px;
+  letter-spacing:2px;text-transform:uppercase;
+  border:1px solid var(--accent);cursor:pointer;
+  clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+  transition:all .2s;text-decoration:none;display:inline-block;
+}
+.btn-ghost:hover{background:rgba(0,229,255,0.1);}
+
+/* ─── THREAT TICKER ─── */
+.ticker{
+  width:100%;overflow:hidden;
+  background:rgba(255,61,90,0.08);
+  border-top:1px solid rgba(255,61,90,0.2);
+  border-bottom:1px solid rgba(255,61,90,0.2);
+  padding:10px 0;margin-top:60px;
+}
+.ticker-inner{
+  display:flex;white-space:nowrap;
+  animation:ticker 30s linear infinite;
+}
+.ticker-item{
+  font-family:var(--font-mono);font-size:12px;
+  color:var(--accent2);padding:0 40px;letter-spacing:1px;
+}
+.ticker-item::before{content:'◆ ';}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ─── SECTION BASE ─── */
+section{padding:100px 48px;max-width:1200px;margin:0 auto;}
+.section-label{
+  font-family:var(--font-mono);font-size:11px;
+  color:var(--accent);letter-spacing:4px;text-transform:uppercase;
+  margin-bottom:16px;display:block;
+}
+.section-title{
+  font-family:var(--font-display);
+  font-size:clamp(48px,6vw,80px);
+  line-height:.95;color:#fff;margin-bottom:24px;
+}
+.section-desc{
+  font-size:15px;line-height:1.8;
+  color:var(--muted);max-width:560px;
+}
+
+/* ─── STATS BAR ─── */
+.stats-bar{
+  background:var(--panel);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  padding:0;
+}
+.stats-inner{
+  max-width:1200px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  divide-x:1px solid var(--border);
+}
+.stat-item{
+  padding:40px 48px;
+  border-right:1px solid var(--border);
+  position:relative;overflow:hidden;
+  transition:background .3s;
+}
+.stat-item:last-child{border-right:none;}
+.stat-item:hover{background:rgba(0,229,255,0.03);}
+.stat-item::before{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:var(--accent);transform:scaleX(0);
+  transform-origin:left;transition:transform .4s ease;
+}
+.stat-item:hover::before{transform:scaleX(1);}
+.stat-num{
+  font-family:var(--font-display);font-size:64px;
+  line-height:1;color:var(--accent);
+  text-shadow:0 0 40px rgba(0,229,255,0.3);
+}
+.stat-label{
+  font-family:var(--font-mono);font-size:12px;
+  color:var(--muted);letter-spacing:2px;
+  text-transform:uppercase;margin-top:8px;
+}
+
+/* ─── VULNERABILITY CARDS ─── */
+.vuln-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
+  gap:2px;margin-top:60px;
+}
+.vuln-card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  padding:36px;
+  position:relative;overflow:hidden;
+  cursor:pointer;
+  transition:transform .3s,border-color .3s;
+}
+.vuln-card::before{
+  content:'';position:absolute;inset:0;
+  background:var(--card-glow,rgba(0,229,255,0.05));
+  opacity:0;transition:opacity .3s;
+}
+.vuln-card:hover::before{opacity:1;}
+.vuln-card:hover{
+  transform:translateY(-4px);
+  border-color:rgba(0,229,255,0.3);
+}
+.vuln-card.danger{--card-glow:rgba(255,61,90,0.08);}
+.vuln-card.danger:hover{border-color:rgba(255,61,90,0.4);}
+.vuln-card.warning{--card-glow:rgba(255,180,0,0.08);}
+.vuln-card.warning:hover{border-color:rgba(255,180,0,0.4);}
+.card-index{
+  font-family:var(--font-mono);font-size:11px;
+  color:var(--muted);letter-spacing:2px;
+  margin-bottom:20px;display:block;
+}
+.card-icon{
+  width:48px;height:48px;
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:20px;
+  transition:border-color .3s,box-shadow .3s;
+}
+.vuln-card:hover .card-icon{
+  border-color:var(--accent);
+  box-shadow:0 0 20px rgba(0,229,255,0.2);
+}
+.card-title{
+  font-family:var(--font-display);font-size:28px;
+  letter-spacing:1px;color:#fff;margin-bottom:10px;
+}
+.card-desc{font-size:14px;line-height:1.7;color:var(--muted);}
+.card-severity{
+  display:inline-block;
+  font-family:var(--font-mono);font-size:10px;
+  letter-spacing:2px;padding:4px 10px;
+  margin-top:20px;text-transform:uppercase;
+}
+.sev-critical{background:rgba(255,61,90,0.15);color:var(--accent2);border:1px solid rgba(255,61,90,0.3);}
+.sev-high{background:rgba(255,180,0,0.12);color:#ffb400;border:1px solid rgba(255,180,0,0.3);}
+.sev-medium{background:rgba(0,229,255,0.1);color:var(--accent);border:1px solid rgba(0,229,255,0.2);}
+
+/* animated scan line on card hover */
+.vuln-card::after{
+  content:'';position:absolute;left:0;right:0;
+  height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  top:-100%;transition:top 0s;opacity:.6;
+}
+.vuln-card:hover::after{
+  top:100%;transition:top .6s linear;
+}
+
+/* ─── ATTACK SIMULATOR ─── */
+.simulator{
+  background:var(--panel);
+  border:1px solid var(--border);
+  margin-top:60px;position:relative;overflow:hidden;
+}
+.sim-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 28px;
+  border-bottom:1px solid var(--border);
+}
+.sim-title{
+  font-family:var(--font-mono);font-size:13px;
+  color:var(--accent);letter-spacing:2px;
+}
+.sim-controls{display:flex;gap:8px;}
+.sim-dot{width:12px;height:12px;border-radius:50%;}
+.sim-body{display:grid;grid-template-columns:260px 1fr;min-height:440px;}
+.sim-sidebar{
+  border-right:1px solid var(--border);
+  padding:20px 0;
+}
+.sim-option{
+  padding:14px 24px;
+  font-family:var(--font-mono);font-size:12px;
+  letter-spacing:1px;color:var(--muted);
+  cursor:pointer;transition:all .2s;
+  border-left:2px solid transparent;
+  display:flex;align-items:center;gap:10px;
+}
+.sim-option:hover{color:var(--text);background:rgba(0,229,255,0.04);}
+.sim-option.active{
+  color:var(--accent);
+  border-left-color:var(--accent);
+  background:rgba(0,229,255,0.06);
+}
+.sim-option-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--muted);flex-shrink:0;
+  transition:background .2s;
+}
+.sim-option.active .sim-option-dot{background:var(--accent);}
+.sim-main{padding:28px;}
+.terminal{
+  background:#000;
+  border:1px solid rgba(0,229,255,0.1);
+  padding:20px;
+  font-family:var(--font-mono);font-size:13px;
+  line-height:1.8;min-height:280px;
+  position:relative;overflow:hidden;
+}
+.terminal-header{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:16px;padding-bottom:12px;
+  border-bottom:1px solid rgba(0,229,255,0.08);
+}
+.t-dot{width:10px;height:10px;border-radius:50%;}
+.t-path{
+  font-family:var(--font-mono);font-size:11px;
+  color:var(--muted);margin-left:auto;
+}
+.t-line{margin-bottom:4px;}
+.t-line.cmd{color:var(--accent3);}
+.t-line.warn{color:#ffb400;}
+.t-line.err{color:var(--accent2);}
+.t-line.ok{color:var(--accent);}
+.t-line.muted{color:var(--muted);}
+.cursor{
+  display:inline-block;width:8px;height:14px;
+  background:var(--accent);vertical-align:middle;
+  animation:blink .8s step-end infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.run-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  margin-top:16px;padding:10px 24px;
+  background:var(--accent);color:#000;
+  font-family:var(--font-mono);font-size:12px;
+  letter-spacing:2px;text-transform:uppercase;
+  border:none;cursor:pointer;transition:all .2s;
+  clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
+}
+.run-btn:hover{background:#fff;transform:translateY(-1px);}
+.run-btn.running{background:var(--accent2);color:#fff;pointer-events:none;}
+.run-btn svg{width:14px;height:14px;}
+
+/* ─── MITIGATION SECTION ─── */
+.mit-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:2px;margin-top:60px;
+}
+.mit-card{
+  background:var(--panel);border:1px solid var(--border);
+  padding:32px;display:flex;gap:24px;
+  transition:border-color .3s,background .3s;
+}
+.mit-card:hover{
+  border-color:rgba(184,255,87,0.3);
+  background:rgba(184,255,87,0.03);
+}
+.mit-num{
+  font-family:var(--font-display);font-size:52px;
+  color:rgba(0,229,255,0.12);line-height:1;
+  flex-shrink:0;min-width:52px;
+  transition:color .3s;
+}
+.mit-card:hover .mit-num{color:rgba(0,229,255,0.3);}
+.mit-title{
+  font-family:var(--font-display);font-size:22px;
+  letter-spacing:1px;color:#fff;margin-bottom:8px;
+}
+.mit-text{font-size:13px;line-height:1.7;color:var(--muted);}
+.mit-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;}
+.mit-tag{
+  font-family:var(--font-mono);font-size:10px;
+  letter-spacing:1px;padding:3px 8px;
+  background:rgba(0,229,255,0.07);
+  color:var(--accent);
+  border:1px solid rgba(0,229,255,0.15);
+}
+
+/* ─── ARCHITECTURE DIAGRAM ─── */
+.arch-wrapper{
+  margin-top:60px;
+  background:var(--panel);border:1px solid var(--border);
+  padding:48px;position:relative;overflow:hidden;
+}
+.arch-wrapper::before{
+  content:'SYSTEM ARCHITECTURE';
+  position:absolute;top:20px;left:48px;
+  font-family:var(--font-mono);font-size:11px;
+  color:var(--muted);letter-spacing:4px;
+}
+.arch-diagram{
+  display:flex;align-items:center;justify-content:center;
+  gap:0;flex-wrap:wrap;margin-top:20px;
+}
+.arch-layer{
+  background:rgba(0,229,255,0.04);
+  border:1px solid rgba(0,229,255,0.12);
+  padding:20px 28px;text-align:center;
+  position:relative;
+  transition:all .3s;
+  min-width:160px;
+}
+.arch-layer:hover{
+  background:rgba(0,229,255,0.08);
+  border-color:rgba(0,229,255,0.35);
+  transform:scale(1.03);
+  box-shadow:0 0 30px rgba(0,229,255,0.1);
+}
+.arch-label{
+  font-family:var(--font-mono);font-size:11px;
+  color:var(--accent);letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:6px;
+}
+.arch-name{
+  font-family:var(--font-display);font-size:20px;
+  letter-spacing:1px;color:#fff;
+}
+.arch-arrow{
+  font-family:var(--font-mono);font-size:20px;
+  color:rgba(0,229,255,0.3);padding:0 8px;
+  animation:arrowPulse 2s ease-in-out infinite;
+}
+@keyframes arrowPulse{0%,100%{color:rgba(0,229,255,0.2)}50%{color:rgba(0,229,255,0.6)}}
+
+/* ─── ALERT FEED ─── */
+.alert-section{
+  padding:100px 0;
+  max-width:1200px;margin:0 auto;
+  padding-left:48px;padding-right:48px;
+}
+.alert-feed-live{
+  background:var(--panel);border:1px solid var(--border);
+  margin-top:60px;overflow:hidden;
+}
+.feed-header{
+  display:flex;align-items:center;gap:12px;
+  padding:16px 24px;border-bottom:1px solid var(--border);
+  font-family:var(--font-mono);font-size:12px;
+  color:var(--muted);
+}
+.feed-live-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent2);
+  animation:pulse-red 1.5s infinite;
+}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 0 0 rgba(255,61,90,.5)}50%{box-shadow:0 0 0 6px rgba(255,61,90,0)}}
+.feed-list{max-height:360px;overflow-y:auto;}
+.feed-list::-webkit-scrollbar{width:4px;}
+.feed-list::-webkit-scrollbar-track{background:transparent;}
+.feed-list::-webkit-scrollbar-thumb{background:var(--border);}
+.feed-item{
+  display:grid;
+  grid-template-columns:80px 80px 1fr 100px;
+  gap:16px;align-items:center;
+  padding:14px 24px;
+  border-bottom:1px solid rgba(26,40,48,0.5);
+  font-family:var(--font-mono);font-size:12px;
+  animation:feedSlide .4s ease;
+  transition:background .2s;
+}
+.feed-item:hover{background:rgba(0,229,255,0.03);}
+@keyframes feedSlide{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.feed-time{color:var(--muted);}
+.feed-sev{text-align:center;padding:2px 6px;font-size:10px;}
+.feed-sev.crit{background:rgba(255,61,90,.15);color:var(--accent2);}
+.feed-sev.high{background:rgba(255,180,0,.12);color:#ffb400;}
+.feed-sev.info{background:rgba(0,229,255,.08);color:var(--accent);}
+.feed-msg{color:var(--text);}
+.feed-status{text-align:right;color:var(--accent3);font-size:11px;}
+
+/* ─── FOOTER ─── */
+footer{
+  border-top:1px solid var(--border);
+  padding:48px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:20px;
+}
+.footer-logo{
+  font-family:var(--font-display);font-size:32px;
+  letter-spacing:4px;color:var(--accent);
+  text-shadow:0 0 20px rgba(0,229,255,0.3);
+}
+.footer-copy{
+  font-family:var(--font-mono);font-size:12px;
+  color:var(--muted);letter-spacing:1px;
+}
+.footer-links{display:flex;gap:24px;list-style:none;}
+.footer-links a{
+  font-family:var(--font-mono);font-size:11px;
+  color:var(--muted);text-decoration:none;
+  letter-spacing:1px;transition:color .2s;
+}
+.footer-links a:hover{color:var(--accent);}
+
+/* ─── SCROLL REVEAL ─── */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.visible{opacity:1;transform:none;}
+.reveal-left{opacity:0;transform:translateX(-24px);transition:opacity .7s ease,transform .7s ease;}
+.reveal-left.visible{opacity:1;transform:none;}
+
+/* ─── COUNTER ANIMATION ─── */
+.count-up{display:inline-block;}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:768px){
+  nav{padding:16px 24px;}
+  .nav-links{display:none;}
+  section{padding:60px 24px;}
+  .stats-inner{grid-template-columns:repeat(2,1fr);}
+  .vuln-grid{grid-template-columns:1fr;}
+  .mit-grid{grid-template-columns:1fr;}
+  .sim-body{grid-template-columns:1fr;}
+  .sim-sidebar{border-right:none;border-bottom:1px solid var(--border);}
+  footer{flex-direction:column;padding:32px 24px;}
+  .feed-item{grid-template-columns:60px 60px 1fr;}
+  .feed-status{display:none;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">SENTINEL</div>
+  <ul class="nav-links">
+    <li><a href="#threats">Threats</a></li>
+    <li><a href="#simulator">Simulator</a></li>
+    <li><a href="#mitigations">Mitigations</a></li>
+    <li><a href="#monitor">Monitor</a></li>
+  </ul>
+  <div class="nav-status">
+    <span class="status-dot"></span>
+    SYSTEM ONLINE
+  </div>
+</nav>
+
+<!-- HERO -->
+<main>
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <span class="hero-eyebrow">OS Security Framework — Real-time Protection</span>
+  <h1>DETECT.<br/><span>MITIGATE.</span><br/>RECOVER.</h1>
+  <p class="hero-sub">A comprehensive framework to detect and neutralise operating system vulnerabilities — buffer overflows, trapdoors, cache poisoning, ROP chains and race conditions — in real time.</p>
+  <div class="hero-cta">
+    <a href="#simulator" class="btn-primary">Launch Simulator</a>
+    <a href="#threats" class="btn-ghost">View Threats</a>
+  </div>
+
+  <!-- TICKER -->
+  <div class="ticker" style="position:absolute;bottom:0;left:0;right:0;margin-top:0;">
+    <div class="ticker-inner" id="ticker-inner"></div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item reveal">
+      <div class="stat-num"><span class="count-up" data-target="2847">0</span>+</div>
+      <div class="stat-label">Attacks blocked</div>
+    </div>
+    <div class="stat-item reveal" style="transition-delay:.1s">
+      <div class="stat-num"><span class="count-up" data-target="99">0</span>%</div>
+      <div class="stat-label">Detection rate</div>
+    </div>
+    <div class="stat-item reveal" style="transition-delay:.2s">
+      <div class="stat-num"><span class="count-up" data-target="12">0</span>ms</div>
+      <div class="stat-label">Response time</div>
+    </div>
+    <div class="stat-item reveal" style="transition-delay:.3s">
+      <div class="stat-num"><span class="count-up" data-target="5">0</span></div>
+      <div class="stat-label">Vulnerability classes</div>
+    </div>
+  </div>
+</div>
+
+<!-- THREATS -->
+<section id="threats">
+  <div class="reveal-left">
+    <span class="section-label">01 / Vulnerability Taxonomy</span>
+    <h2 class="section-title">KNOWN<br/>THREATS</h2>
+    <p class="section-desc">Five critical OS-level vulnerability classes, each with distinct attack vectors, detection signatures, and mitigation strategies.</p>
+  </div>
+  <div class="vuln-grid">
+    <div class="vuln-card danger reveal" style="transition-delay:.05s">
+      <span class="card-index">CVE CLASS 001</span>
+      <div class="card-icon">⚡</div>
+      <div class="card-title">BUFFER OVERFLOW</div>
+      <p class="card-desc">Overwrites adjacent memory by exceeding allocated buffer bounds, enabling control-flow hijacking via corrupted return addresses or function pointers.</p>
+      <span class="card-severity sev-critical">CRITICAL — CVSS 9.8</span>
+    </div>
+    <div class="vuln-card danger reveal" style="transition-delay:.1s">
+      <span class="card-index">CVE CLASS 002</span>
+      <div class="card-icon">🔓</div>
+      <div class="card-title">TRAPDOOR / BACKDOOR</div>
+      <p class="card-desc">Hidden authentication bypass mechanisms embedded in software or firmware, enabling persistent unauthorised access without triggering standard auth flows.</p>
+      <span class="card-severity sev-critical">CRITICAL — CVSS 9.1</span>
+    </div>
+    <div class="vuln-card warning reveal" style="transition-delay:.15s">
+      <span class="card-index">CVE CLASS 003</span>
+      <div class="card-icon">🌐</div>
+      <div class="card-title">CACHE POISONING</div>
+      <p class="card-desc">Injects malicious entries into DNS or web caches by exploiting predictable transaction IDs, redirecting users to attacker-controlled infrastructure.</p>
+      <span class="card-severity sev-high">HIGH — CVSS 8.2</span>
+    </div>
+    <div class="vuln-card danger reveal" style="transition-delay:.2s">
+      <span class="card-index">CVE CLASS 004</span>
+      <div class="card-icon">⛓</div>
+      <div class="card-title">ROP CHAIN</div>
+      <p class="card-desc">Return-Oriented Programming chains existing code gadgets to build arbitrary computation without injecting new code, defeating DEP and NX protections entirely.</p>
+      <span class="card-severity sev-critical">CRITICAL — CVSS 9.3</span>
+    </div>
+    <div class="vuln-card warning reveal" style="transition-delay:.25s">
+      <span class="card-index">CVE CLASS 005</span>
+      <div class="card-icon">⏱</div>
+      <div class="card-title">RACE CONDITION (TOCTOU)</div>
+      <p class="card-desc">Exploits the window between a security check and resource use, allowing attackers to swap checked resources before the operation completes — bypassing privilege checks.</p>
+      <span class="card-severity sev-high">HIGH — CVSS 7.8</span>
+    </div>
+    <div class="vuln-card reveal" style="transition-delay:.3s;border-style:dashed;opacity:.6;cursor:default;">
+      <span class="card-index">COMING SOON</span>
+      <div class="card-icon" style="opacity:.4">+</div>
+      <div class="card-title" style="color:var(--muted)">MORE VECTORS</div>
+      <p class="card-desc">Heap spraying, use-after-free, format string attacks, integer overflow, and privilege escalation modules in development.</p>
+      <span class="card-severity sev-medium">ROADMAP</span>
+    </div>
+  </div>
+</section>
+
+<!-- SIMULATOR -->
+<section id="simulator" style="padding-top:0;max-width:1200px;margin:0 auto;padding-left:48px;padding-right:48px;padding-bottom:100px;">
+  <div class="reveal-left">
+    <span class="section-label">02 / Attack Simulation Engine</span>
+    <h2 class="section-title">LIVE<br/>SIMULATOR</h2>
+    <p class="section-desc">Execute simulated attacks against the framework and observe real-time detection, alerting, and automated mitigation responses.</p>
+  </div>
+  <div class="simulator reveal" style="transition-delay:.1s">
+    <div class="sim-header">
+      <span class="sim-title">SENTINEL ATTACK SIMULATION ENGINE v2.4</span>
+      <div class="sim-controls">
+        <div class="sim-dot" style="background:#ff5f57"></div>
+        <div class="sim-dot" style="background:#ffbd2e"></div>
+        <div class="sim-dot" style="background:#28ca42"></div>
+      </div>
+    </div>
+    <div class="sim-body">
+      <div class="sim-sidebar">
+        <div class="sim-option active" data-vuln="buffer" onclick="selectVuln(this)">
+          <div class="sim-option-dot"></div>BUFFER OVERFLOW
+        </div>
+        <div class="sim-option" data-vuln="trapdoor" onclick="selectVuln(this)">
+          <div class="sim-option-dot"></div>TRAPDOOR
+        </div>
+        <div class="sim-option" data-vuln="cache" onclick="selectVuln(this)">
+          <div class="sim-option-dot"></div>CACHE POISONING
+        </div>
+        <div class="sim-option" data-vuln="rop" onclick="selectVuln(this)">
+          <div class="sim-option-dot"></div>ROP CHAIN
+        </div>
+        <div class="sim-option" data-vuln="race" onclick="selectVuln(this)">
+          <div class="sim-option-dot"></div>RACE CONDITION
+        </div>
+      </div>
+      <div class="sim-main">
+        <div class="terminal">
+          <div class="terminal-header">
+            <div class="t-dot" style="background:#ff5f57"></div>
+            <div class="t-dot" style="background:#ffbd2e"></div>
+            <div class="t-dot" style="background:#28ca42"></div>
+            <span class="t-path">sentinel@os-framework:~$</span>
+          </div>
+          <div id="terminal-output"></div>
+          <span class="cursor"></span>
+        </div>
+        <button class="run-btn" id="run-btn" onclick="runAttack()">
+          <svg viewBox="0 0 16 16" fill="currentColor"><polygon points="3,1 14,8 3,15"/></svg>
+          RUN SIMULATION
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<div style="max-width:1200px;margin:0 auto;padding:0 48px 80px;">
+  <div class="arch-wrapper reveal">
+    <div class="arch-diagram">
+      <div class="arch-layer">
+        <div class="arch-label">Layer 0</div>
+        <div class="arch-name">INPUT LAYER</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-layer">
+        <div class="arch-label">Layer 1</div>
+        <div class="arch-name">DETECTION ENGINE</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-layer">
+        <div class="arch-label">Layer 2</div>
+        <div class="arch-name">ALERT SYSTEM</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-layer">
+        <div class="arch-label">Layer 3</div>
+        <div class="arch-name">MITIGATION ENGINE</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-layer">
+        <div class="arch-label">Layer 4</div>
+        <div class="arch-name">RECOVERY SYSTEM</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MITIGATIONS -->
+<section id="mitigations">
+  <div class="reveal-left">
+    <span class="section-label">03 / Defensive Measures</span>
+    <h2 class="section-title">MITIGATION<br/>STRATEGIES</h2>
+    <p class="section-desc">Layered defences across prevention, detection, and recovery — applied at the OS, memory, network, and process levels.</p>
+  </div>
+  <div class="mit-grid">
+    <div class="mit-card reveal" style="transition-delay:.05s">
+      <div class="mit-num">01</div>
+      <div>
+        <div class="mit-title">STACK CANARIES & BOUNDS CHECK</div>
+        <p class="mit-text">Sentinel values placed between local variables and return address detect overflow before control flow is hijacked. Combined with compiler-enforced bounds checking on array operations.</p>
+        <div class="mit-tags"><span class="mit-tag">PREVENTION</span><span class="mit-tag">MEMORY</span><span class="mit-tag">BUFFER OVERFLOW</span></div>
+      </div>
+    </div>
+    <div class="mit-card reveal" style="transition-delay:.1s">
+      <div class="mit-num">02</div>
+      <div>
+        <div class="mit-title">ASLR + DEP / NX BITS</div>
+        <p class="mit-text">Address space layout randomisation defeats hardcoded pointer exploits. Non-executable stack and heap pages (DEP/NX) prevent shellcode execution even after successful overflow.</p>
+        <div class="mit-tags"><span class="mit-tag">PREVENTION</span><span class="mit-tag">MEMORY</span><span class="mit-tag">ROP</span></div>
+      </div>
+    </div>
+    <div class="mit-card reveal" style="transition-delay:.15s">
+      <div class="mit-num">03</div>
+      <div>
+        <div class="mit-title">CODE SIGNING & BINARY INTEGRITY</div>
+        <p class="mit-text">Cryptographic signatures on all binaries and kernel modules detect trapdoor insertion and supply-chain compromise at load time. Verified boot chains ensure integrity from firmware up.</p>
+        <div class="mit-tags"><span class="mit-tag">DETECTION</span><span class="mit-tag">OS-LEVEL</span><span class="mit-tag">TRAPDOOR</span></div>
+      </div>
+    </div>
+    <div class="mit-card reveal" style="transition-delay:.2s">
+      <div class="mit-num">04</div>
+      <div>
+        <div class="mit-title">DNSSEC + CACHE HARDENING</div>
+        <p class="mit-text">DNSSEC signed records prevent forged DNS responses. Source-port randomisation and TTL anomaly monitoring close the transaction-ID prediction attack surface against resolvers.</p>
+        <div class="mit-tags"><span class="mit-tag">PREVENTION</span><span class="mit-tag">NETWORK</span><span class="mit-tag">CACHE POISON</span></div>
+      </div>
+    </div>
+    <div class="mit-card reveal" style="transition-delay:.25s">
+      <div class="mit-num">05</div>
+      <div>
+        <div class="mit-title">ATOMIC OPS & MUTEX LOCKS</div>
+        <p class="mit-text">Kernel-level atomic check-and-set operations eliminate TOCTOU race windows. Mandatory access control policies restrict which processes can access sensitive resources, shrinking the attack surface.</p>
+        <div class="mit-tags"><span class="mit-tag">PREVENTION</span><span class="mit-tag">CONCURRENCY</span><span class="mit-tag">TOCTOU</span></div>
+      </div>
+    </div>
+    <div class="mit-card reveal" style="transition-delay:.3s">
+      <div class="mit-num">06</div>
+      <div>
+        <div class="mit-title">SNAPSHOT ROLLBACK & ISOLATION</div>
+        <p class="mit-text">VM and container snapshots enable sub-minute recovery to a known-good state. Process sandboxing via seccomp and namespaces limits blast radius — a compromised process cannot escalate.</p>
+        <div class="mit-tags"><span class="mit-tag">RECOVERY</span><span class="mit-tag">ISOLATION</span><span class="mit-tag">ALL CLASSES</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE MONITOR -->
+<section id="monitor" class="alert-section">
+  <div class="reveal-left">
+    <span class="section-label">04 / Real-time Alerting</span>
+    <h2 class="section-title">LIVE<br/>MONITOR</h2>
+    <p class="section-desc">Continuous kernel-level event stream. Every detection, mitigation, and recovery action is logged in real time with severity classification.</p>
+  </div>
+  <div class="alert-feed-live reveal">
+    <div class="feed-header">
+      <div class="feed-live-dot"></div>
+      LIVE EVENT STREAM &nbsp;|&nbsp; <span id="feed-count">0</span> EVENTS LOGGED
+    </div>
+    <div class="feed-list" id="feed-list"></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">SENTINEL</div>
+  <ul class="footer-links">
+    <li><a href="#threats">Threats</a></li>
+    <li><a href="#simulator">Simulator</a></li>
+    <li><a href="#mitigations">Mitigations</a></li>
+    <li><a href="#monitor">Monitor</a></li>
+  </ul>
+  <div class="footer-copy">OS SECURITY FRAMEWORK © 2026 — ALL SYSTEMS NOMINAL</div>
+</footer>
+</main>
+
+<script>
+/* ── MATRIX RAIN ── */
+(function(){
+  const canvas = document.getElementById('matrix-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, cols, drops;
+  const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノABCDEF0123456789<>{}[]';
+  function init(){
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    cols = Math.floor(W/16);
+    drops = Array(cols).fill(1);
+  }
+  function draw(){
+    ctx.fillStyle='rgba(2,6,8,0.05)';
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#00e5ff';
+    ctx.font='14px Share Tech Mono';
+    drops.forEach((y,i)=>{
+      const ch = chars[Math.floor(Math.random()*chars.length)];
+      ctx.fillText(ch, i*16, y*16);
+      if(y*16>H && Math.random()>.97) drops[i]=0;
+      drops[i]++;
+    });
+  }
+  init();
+  window.addEventListener('resize',init);
+  setInterval(draw,60);
+})();
+
+/* ── TICKER ── */
+const tickerMsgs = [
+  'BUFFER OVERFLOW DETECTED IN PROCESS heap_alloc — MITIGATED',
+  'STACK CANARY VIOLATION AT 0x7ffe8b2c4d10 — PROCESS TERMINATED',
+  'DNS CACHE POISONING ATTEMPT BLOCKED — DNSSEC VALIDATION FAILED',
+  'ROP GADGET CHAIN DETECTED — CFI VIOLATION RAISED',
+  'BINARY INTEGRITY CHECK FAILED ON /usr/lib/auth.so — ROLLBACK INITIATED',
+  'TOCTOU RACE CONDITION IN /tmp/setuid_proc — INOTIFY ALERT TRIGGERED',
+  'ASLR RE-RANDOMISATION APPLIED — ALL PROCESSES RESTARTED',
+  'SHADOW STACK MISMATCH IN PID 4422 — EXECUTION HALTED',
+];
+const tickerEl = document.getElementById('ticker-inner');
+const full = [...tickerMsgs,...tickerMsgs].map(m=>`<span class="ticker-item">${m}</span>`).join('');
+tickerEl.innerHTML = full + full;
+
+/* ── SCROLL REVEAL ── */
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');}});
+},{threshold:0.1});
+document.querySelectorAll('.reveal,.reveal-left').forEach(el=>observer.observe(el));
+
+/* ── COUNT UP ── */
+const countObserver = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting && !e.target.dataset.done){
+      e.target.dataset.done=1;
+      const target = +e.target.dataset.target;
+      const dur = 1600;
+      const start = performance.now();
+      function frame(now){
+        const p = Math.min((now-start)/dur,1);
+        const eased = 1-Math.pow(1-p,3);
+        e.target.textContent = Math.round(eased*target);
+        if(p<1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+  });
+},{threshold:0.5});
+document.querySelectorAll('.count-up').forEach(el=>countObserver.observe(el));
+
+/* ── SIMULATOR ── */
+const simData = {
+  buffer:{
+    steps:[
+      {t:'cmd', m:'$ sentinel --simulate buffer-overflow --target heap_alloc'},
+      {t:'muted', m:'[*] Initialising fuzzing engine with cyclic De Bruijn sequence...'},
+      {t:'muted', m:'[*] Probing input boundary at offset 0x00–0xFF...'},
+      {t:'warn', m:'[!] Boundary exceeded at offset 0x48 — EIP overwrite at 0x7ffe8b2c'},
+      {t:'muted', m:'[*] Constructing payload: NOP sled (128b) + shellcode + ret addr'},
+      {t:'err',  m:'[ATTACK] Injecting crafted buffer — targeting saved return address...'},
+      {t:'ok',   m:'[DETECT] Stack canary mismatch — SIGSEGV raised before ret executes'},
+      {t:'ok',   m:'[MITIGATE] Process terminated; core dump saved; ASLR re-randomised'},
+      {t:'ok',   m:'[STATUS] Threat neutralised. Severity: CRITICAL | Response: 8ms'},
+    ]
+  },
+  trapdoor:{
+    steps:[
+      {t:'cmd', m:'$ sentinel --simulate trapdoor --target /usr/lib/auth.so'},
+      {t:'muted', m:'[*] Running entropy analysis on binary section .data...'},
+      {t:'muted', m:'[*] Disassembling authentication routine at 0x401080...'},
+      {t:'warn', m:'[!] Hardcoded credential string found at offset 0x12f4: "s3cr3t_b4ckd00r"'},
+      {t:'err',  m:'[ATTACK] Triggering bypass branch with magic sequence...'},
+      {t:'ok',   m:'[DETECT] Code signature mismatch — hash divergence in .text section'},
+      {t:'ok',   m:'[DETECT] IDS flagged anomalous auth success without valid credential'},
+      {t:'ok',   m:'[MITIGATE] Binary replaced from verified snapshot; session invalidated'},
+      {t:'ok',   m:'[STATUS] Threat neutralised. Severity: CRITICAL | Response: 5ms'},
+    ]
+  },
+  cache:{
+    steps:[
+      {t:'cmd', m:'$ sentinel --simulate cache-poisoning --target dns-resolver'},
+      {t:'muted', m:'[*] Monitoring DNS resolver traffic on UDP/53...'},
+      {t:'muted', m:'[*] Analysing source port entropy — low entropy detected (range: 40000-40100)'},
+      {t:'warn', m:'[!] Forged response flood initiated — transaction ID prediction attack'},
+      {t:'err',  m:'[ATTACK] Injecting malicious A-record for target.example.com...'},
+      {t:'ok',   m:'[DETECT] DNSSEC validation failed — signature mismatch on injected record'},
+      {t:'ok',   m:'[DETECT] TTL anomaly: 60s vs expected 3600s — cache alert triggered'},
+      {t:'ok',   m:'[MITIGATE] Cache flushed; DNSSEC enforced; source port randomised'},
+      {t:'ok',   m:'[STATUS] Threat neutralised. Severity: HIGH | Response: 11ms'},
+    ]
+  },
+  rop:{
+    steps:[
+      {t:'cmd', m:'$ sentinel --simulate rop-chain --target libc-2.35'},
+      {t:'muted', m:'[*] Scanning binary and libc-2.35 for ROP gadgets...'},
+      {t:'muted', m:'[*] Found 1,842 gadgets — building pivot → pop rdi → system chain'},
+      {t:'warn', m:'[!] Stack pivot gadget at 0x401250; system@libc at 0x7f8c3b2a1d50'},
+      {t:'err',  m:'[ATTACK] Overwriting return address with gadget chain start...'},
+      {t:'ok',   m:'[DETECT] Shadow stack (CET) mismatch — return address divergence'},
+      {t:'ok',   m:'[DETECT] CFI violation raised — indirect call target not in allowlist'},
+      {t:'ok',   m:'[MITIGATE] Process killed; CFI policy logged; overflow source patched'},
+      {t:'ok',   m:'[STATUS] Threat neutralised. Severity: CRITICAL | Response: 3ms'},
+    ]
+  },
+  race:{
+    steps:[
+      {t:'cmd', m:'$ sentinel --simulate toctou --target /usr/bin/setuid-helper'},
+      {t:'muted', m:'[*] Identifying privileged check-then-use operations...'},
+      {t:'muted', m:'[*] Spawning race thread: symlink swap loop at 1000 iter/sec'},
+      {t:'warn', m:'[!] os.access() passes on benign /tmp/legit — swap window open'},
+      {t:'err',  m:'[ATTACK] Symlink swapped to /etc/shadow before open() call...'},
+      {t:'ok',   m:'[DETECT] inotify watcher: unexpected symlink change during operation'},
+      {t:'ok',   m:'[DETECT] Audit log: open() target diverges from access() target'},
+      {t:'ok',   m:'[MITIGATE] Operation rolled back; mutex lock retrofitted on check-use'},
+      {t:'ok',   m:'[STATUS] Threat neutralised. Severity: HIGH | Response: 14ms'},
+    ]
+  }
+};
+
+let currentVuln = 'buffer';
+let simRunning = false;
+
+function selectVuln(el){
+  document.querySelectorAll('.sim-option').forEach(o=>o.classList.remove('active'));
+  el.classList.add('active');
+  currentVuln = el.dataset.vuln;
+  document.getElementById('terminal-output').innerHTML = '';
+  const btn = document.getElementById('run-btn');
+  btn.classList.remove('running');
+  btn.innerHTML = '<svg viewBox="0 0 16 16" fill="currentColor"><polygon points="3,1 14,8 3,15"/></svg> RUN SIMULATION';
+}
+
+async function runAttack(){
+  if(simRunning) return;
+  simRunning = true;
+  const btn = document.getElementById('run-btn');
+  btn.classList.add('running');
+  btn.textContent = 'RUNNING…';
+  const out = document.getElementById('terminal-output');
+  out.innerHTML = '';
+  const steps = simData[currentVuln].steps;
+  for(let i=0;i<steps.length;i++){
+    await sleep(420 + Math.random()*200);
+    const div = document.createElement('div');
+    div.className = 't-line ' + steps[i].t;
+    div.textContent = steps[i].m;
+    out.appendChild(div);
+    out.scrollTop = out.scrollHeight;
+    // push to feed
+    if(steps[i].t === 'ok' && steps[i].m.includes('STATUS')){
+      pushFeedEvent(steps[i].m, currentVuln);
+    }
+  }
+  btn.classList.remove('running');
+  btn.innerHTML = '<svg viewBox="0 0 16 16" fill="currentColor"><polygon points="3,1 14,8 3,15"/></svg> RUN AGAIN';
+  simRunning = false;
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+/* ── LIVE FEED ── */
+let feedCount = 0;
+const feedList = document.getElementById('feed-list');
+const feedItems = [];
+
+const initEvents = [
+  {sev:'info', msg:'SENTINEL framework initialised — all detection modules online', status:'NOMINAL'},
+  {sev:'info', msg:'ASLR enabled on all 847 monitored processes', status:'NOMINAL'},
+  {sev:'high', msg:'Unusual syscall pattern from PID 3812 — sched_setscheduler abuse', status:'BLOCKED'},
+  {sev:'info', msg:'Scheduled kernel integrity scan completed — no anomalies found', status:'CLEAN'},
+];
+
+function pushFeedEvent(msg, vuln){
+  const sevMap = {buffer:'crit',trapdoor:'crit',cache:'high',rop:'crit',race:'high'};
+  addFeedRow(sevMap[vuln]||'high', msg.replace('[STATUS] ','').replace('Threat neutralised. ',''), 'MITIGATED');
+}
+
+function addFeedRow(sev, msg, status){
+  feedCount++;
+  document.getElementById('feed-count').textContent = feedCount;
+  const now = new Date();
+  const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  const row = document.createElement('div');
+  row.className = 'feed-item';
+  row.innerHTML = `
+    <span class="feed-time">${time}</span>
+    <span class="feed-sev ${sev}">${sev.toUpperCase()}</span>
+    <span class="feed-msg">${msg}</span>
+    <span class="feed-status">${status}</span>
+  `;
+  feedList.insertBefore(row, feedList.firstChild);
+  feedItems.unshift({sev,msg,status,time});
+  if(feedItems.length > 20){
+    feedList.removeChild(feedList.lastChild);
+  }
+}
+
+// init feed
+initEvents.forEach((e,i)=>{
+  setTimeout(()=>addFeedRow(e.sev, e.msg, e.status), 800 + i*600);
+});
+
+// auto-inject events
+const autoEvents = [
+  {sev:'info', msg:'ASLR re-randomisation cycle completed', status:'NOMINAL'},
+  {sev:'high', msg:'Heap spray pattern detected in sandboxed process', status:'BLOCKED'},
+  {sev:'info', msg:'Binary integrity scan: 2,841 modules verified', status:'CLEAN'},
+  {sev:'crit', msg:'Privilege escalation via setuid binary — blocked by MAC policy', status:'BLOCKED'},
+  {sev:'high', msg:'Format string vulnerability probe in syslogd — quarantined', status:'BLOCKED'},
+  {sev:'info', msg:'Network egress anomaly resolved — false positive confirmed', status:'NOMINAL'},
+];
+let autoIdx = 0;
+setInterval(()=>{
+  const e = autoEvents[autoIdx % autoEvents.length];
+  addFeedRow(e.sev, e.msg, e.status);
+  autoIdx++;
+}, 7000);
+</script>
+</body>
+</html>
